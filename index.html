@@ -6,10 +6,10 @@
   <script type="text/javascript">
     var L_PREFER_CANVAS = true;
   </script>
-  <script src="bower_components/angular/angular.min.js" type="text/javascript"></script>
-  <script src="bower_components/leaflet/dist/leaflet.js" type="text/javascript"></script>
-  <script src="bower_components/esri-leaflet/dist/esri-leaflet.js" type="text/javascript"></script>
-  <link rel="stylesheet" href="bower_components/leaflet/dist/leaflet.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0/angular.min.js" type="text/javascript"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js" type="text/javascript"></script>
+  <script src="//cdn.jsdelivr.net/leaflet.esri/1.0.3/esri-leaflet.js" type="text/javascript"></script>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.css">
   <style>
     html,
     body {
@@ -53,6 +53,7 @@
         });
       }
     });
+
     app.directive('esriMap', function() {
       return {
         restrict: 'E',
@@ -101,16 +102,5 @@
     </ul>
   </div>
   <esri-map service="service"></esri-map>
-  <script>
-    // L.esri.featureLayer({
-    //   url: 'http://services1.arcgis.com/RTK5Unh1Z71JKIiR/ArcGIS/rest/services/Global_200_Ecoregions/FeatureServer/0/'
-    // }).addTo(map);
-    // L.esri.featureLayer({
-    //   url: 'http://services1.arcgis.com/RTK5Unh1Z71JKIiR/ArcGIS/rest/services/Global_200_Ecoregions/FeatureServer/1/'
-    // }).addTo(map);
-    // L.esri.featureLayer({
-    //   url: 'http://services1.arcgis.com/RTK5Unh1Z71JKIiR/ArcGIS/rest/services/Global_200_Ecoregions/FeatureServer/2/'
-    // }).addTo(map);
-  </script>
 </body>
 </html>
