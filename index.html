@@ -104,6 +104,7 @@
       };
 
       $scope.loadService = function(service) {
+        $scope.service = false;
         $http.get(service.url, {
           params: {
             f: 'json'
@@ -147,8 +148,10 @@
 
           scope.$watch('service', function() {
 
-            if(map)
+            if(map) {
               map.remove();
+              map = false;
+            }
 
             if(scope.service) {
               map = L.map('map').setView([0,0], 2);
