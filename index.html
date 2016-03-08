@@ -89,6 +89,7 @@
 
       $scope.loadItem = function(item) {
         $scope.service = false;
+        $scope.item = false;
         $http.get(esriService.getApiRoot() + '/content/items/' + item.id, {
           params: {
             f: 'json'
