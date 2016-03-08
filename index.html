@@ -18,13 +18,21 @@
       margin: 0;
       padding: 0;
     }
-    #services,
-    #map {
+    #list,
+    #item {
       width: 50%;
       height: 100%;
       float: left;
     }
-    #services {
+    #item-info,
+    #map,
+    #iframe {
+      width: 100%;
+      height: 50%;
+      display: block;
+    }
+    #item-info,
+    #list {
       box-sizing: border-box;
       padding: 20px;
       overflow: auto;
@@ -33,16 +41,67 @@
   <script type="text/javascript">
     var app = angular.module('arcgis.experiments', []);
 
-    app.constant('apiRoot', 'http://services1.arcgis.com/RTK5Unh1Z71JKIiR/ArcGIS/rest/services/');
+    app.constant('esriOrganization', 'panda');
 
-    app.controller('MainCtrl', function($scope, $http, apiRoot) {
-      $http.get(apiRoot, {
+    app.factory('esriService', function($http, $q, esriOrganization) {
+      var apiRoot = 'https://' + esriOrganization + '.maps.arcgis.com/sharing/rest';
+
+      var getOrganization = $http.get(apiRoot + '/portals/self', {
         params: {
           f: 'json'
         }
-      }).then(function(data) {
-        $scope.data = data.data;
       });
+
+      return {
+        getApiRoot: function() {
+          return apiRoot;
+        },
+        getOrganization: function() {
+          return getOrganization;
+        },
+        getContent: function() {
+          var deferred = $q.defer();
+          getOrganization.then(function(data) {
+            console.log(data);
+            return $http.get(apiRoot + '/search', {
+              params: {
+                f: 'json',
+                num: 100,
+                q: 'orgid:' + data.data.id
+              }
+            }).then(function(data) {
+              console.log(data);
+              deferred.resolve(data);
+            });
+          });
+          return deferred.promise;
+        }
+      }
+    });
+
+    app.controller('MainCtrl', function($scope, $http, esriOrganization, esriService) {
+
+      $scope.organization = esriOrganization;
+
+      esriService.getContent().then(function(data) {
+        $scope.content = data.data;
+      });
+
+      $scope.loadItem = function(item) {
+        $scope.service = false;
+        $http.get(esriService.getApiRoot() + '/content/items/' + item.id, {
+          params: {
+            f: 'json'
+          }
+        }).then(function(data) {
+          console.log(data);
+          $scope.item = data.data;
+          if(item.type == 'Feature Service' || item.type == 'Map Service') {
+            $scope.loadService(item);
+          }
+        });
+      };
+
       $scope.loadService = function(service) {
         $http.get(service.url, {
           params: {
@@ -51,6 +110,25 @@
         }).then(function(data) {
           $scope.service = angular.extend(data.data, service);
         });
+      };
+
+    });
+
+    app.directive('esriIframe', function($sce) {
+      return {
+        restrict: 'E',
+        scope: {
+          url: '='
+        },
+        template: '<iframe id="iframe" ng-src="{{src}}" frameborder="0"></iframe>',
+        replace: true,
+        link: function(scope, element, attrs) {
+          scope.$watch('url', function() {
+            if(scope.url) {
+              scope.src = $sce.trustAsResourceUrl(scope.url);
+            }
+          });
+        }
       }
     });
 
@@ -74,14 +152,22 @@
             if(scope.service) {
               map = L.map('map').setView([0,0], 2);
               L.esri.basemapLayer("Topographic").addTo(map);
-              var featureGroup = L.featureGroup().on('layeradd', function() {
-                // map.fitBounds(featureGroup.getBounds());
-              }).addTo(map);
-              scope.service.layers.forEach(function(layer) {
-                L.esri.featureLayer({
-                  url: scope.service.url + '/' + layer.id
-                }).addTo(featureGroup);
-              });
+              if(scope.service.type == 'Feature Service') {
+                var featureGroup = L.featureGroup().on('layeradd', function() {
+                }).addTo(map);
+                scope.service.layers.forEach(function(layer) {
+                  L.esri.featureLayer({
+                    url: scope.service.url + '/' + layer.id
+                  }).addTo(featureGroup);
+                });
+              } else if(scope.service.type == 'Map Service') {
+                L.esri.tiledMapLayer({
+                  url: scope.service.url
+                }).addTo(map);
+              }
+              setTimeout(function() {
+                map.invalidateSize();
+              }, 200);
             }
 
           }, true);
@@ -91,16 +177,30 @@
   </script>
 </head>
 <body ng-app="arcgis.experiments" ng-controller="MainCtrl">
-  <div id="services">
+  <div id="list">
     <h1>ArcGIS API Experiments</h1>
+    <p>Listing contents for <strong>{{organization}}</strong></p>
+    <p>Inspect the content by clicking. Feature Service and Map Service are displayed in map view using esri-leaflet plugin. Other types are embedded with iframe.</p>
+    <p>Showing {{content.start}}-{{content.num}} out of {{content.total}} items.</p>
     <ul>
-      <li ng-repeat="service in data.services">
-        <a href="javascript:void(0);" ng-click="loadService(service)">
-          {{service.name}} ({{service.type}})
-        </a>
+      <li ng-repeat="item in content.results">
+        <h2>
+          <a href="javascript:void(0);" ng-click="loadItem(item)">{{item.title}}</a>
+        </h2>
+        <p>Type: {{item.type}}</p>
+        <p ng-show="item.snippet">{{item.snippet}}</p>
       </li>
     </ul>
   </div>
-  <esri-map service="service"></esri-map>
+  <div id="item" ng-show="item">
+    <div id="item-info">
+      <h2>{{item.title}}</h2>
+      <p>{{item.type}}: {{item.url}}</p>
+      <p>{{item.snippet}}</p>
+      <p>{{item.description}}</p>
+    </div>
+    <esri-iframe url="item.url" ng-hide="service"></esri-iframe>
+    <esri-map service="service" ng-show="service"></esri-map>
+  </div>
 </body>
 </html>
