@@ -1,0 +1,27 @@
+{
+  "name": "arcgis-api-experiments",
+  "version": "0.1.0",
+  "description": "ArcGIS Online API experiments",
+  "main": "index.js",
+  "scripts": {
+    "import": "node lib/arcgis2pgsql.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ecodigital/arcgis-api-experiments.git"
+  },
+  "keywords": [
+    "arcgis",
+    "api",
+    "postgis"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ecodigital/arcgis-api-experiments/issues"
+  },
+  "homepage": "https://github.com/ecodigital/arcgis-api-experiments#readme",
+  "dependencies": {
+    "request": "^2.69.0"
+  }
+}
